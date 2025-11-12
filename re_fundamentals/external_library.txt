@@ -1,1 +1,1 @@
-readelf -d task2
+lib_custom_hbtn.so

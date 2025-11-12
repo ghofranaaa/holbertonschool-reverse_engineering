@@ -34,7 +34,7 @@ magic_number="$(echo "$header" | awk '/Magic:/ { $1=""; sub(/^ +/,""); print }' 
 class="$(echo "$header" | awk -F: '/Class:/ { gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2 }')"
 
 # Byte Order: use readelf's "Data:" line (e.g., little endian / big endian)
-byte_order="$(echo "$header" | awk -F: '/Data:/ { gsub(/^[ \t]+|[ \t]+$/,"",$2); sub(/.*,\s*/,"",$2); print $2 }')"
+byte_order="$(echo "$header" | awk -F: '/Data:/ { gsub(/^[ \t]+|[ \t]+$/,"",$2); sub(/.*,\s*/,"",$2); gsub(/^[ \t]+/,"",$2); print $2 }')"
 
 # Entry point address: capture the hex address after "Entry point address:"
 entry_point_address="$(echo "$header" | awk -F: '/Entry point address:/ { gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2 }')"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import struct
 
-# Raw .data bytes
+# Encrypted flag - 7 chunks of 8 bytes from 0x4020
 data = bytes.fromhex(
     "8e82d972b66c836f"
     "a896da60a7779a69"
@@ -12,23 +12,23 @@ data = bytes.fromhex(
     "9980c063a763f700"
 )
 
-# Exponent and modulus (little-endian 64-bit)
-exponent = struct.unpack('<Q', bytes.fromhex('ffffffffffffff00'))[0]
-modulus  = struct.unpack('<Q', bytes.fromhex('fbffffffffffff0f'))[0]
+# Read as little-endian 64-bit from exact bytes
+exponent = struct.unpack('<Q', bytes.fromhex('ffffffffffff0000'))[0]
+modulus  = struct.unpack('<Q', bytes.fromhex('fbffffffffffffff'))[0]
+
+# But modulus is 8 bytes at 0x4060: fbffffff ffffff0f
+modulus = struct.unpack('<Q', bytes.fromhex('fbffffffffffffff0f'[:16]))[0]
 
 print(f"exponent: {hex(exponent)}")
 print(f"modulus:  {hex(modulus)}")
 
-# Fast modular exponentiation
 key = pow(2, exponent, modulus)
 print(f"key: {hex(key)}")
 
-# Decrypt: XOR each 8-byte chunk with key
 flag = ""
 for i in range(7):
     chunk = struct.unpack('<Q', data[i*8:(i+1)*8])[0]
     decrypted = chunk ^ key
-    # Extract bytes
     for j in range(8):
         byte = (decrypted >> (j*8)) & 0xFF
         if byte != 0:

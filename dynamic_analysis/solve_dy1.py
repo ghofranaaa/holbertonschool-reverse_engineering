@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+import struct
+
+# Expected encrypted bytes from verify_flag (47 bytes)
+expected = bytes([
+    0x49, 0x00, 0xed, 0xeb, 0x78, 0xa3, 0xf0, 0x4e,
+    0x4a, 0x99, 0x13, 0x50, 0xf8, 0x56, 0x96, 0x45,
+    0x85, 0x15, 0xe9, 0x60, 0xaa, 0xf8, 0xab, 0x0d,
+    0x68, 0x28, 0xd3, 0x73, 0x68, 0x30, 0x48, 0xce,
+    0x6d, 0x8d, 0xd0, 0x29, 0x7a, 0xa5, 0x23, 0x73,
+    0xd8, 0x56, 0xea, 0xe1, 0x5f, 0x60, 0x5a
+])
+
+# PRNG implementation
+def prng(state):
+    state = (state * 0x41c64e6d + 0x3039) & 0x7fffffff
+    return state, (state >> 16) & 0xff
+
+# custom_encrypt operations per byte:
+# 1. xor with prng output
+# 2. rotate left 3: (byte << 3) | (byte >> 5)
+# 3. subtract 0x5b
+
+# Reverse: for each byte
+# 1. add 0x5b
+# 2. rotate right 3: (byte >> 3) | (byte << 5)
+# 3. xor with prng output
+
+state = 0x3039
+flag = ""
+for i in range(47):
+    state, rng_byte = prng(state)
+    enc = expected[i]
+    # Reverse step 3: add 0x5b
+    val = (enc + 0x5b) & 0xff
+    # Reverse step 2: rotate right 3
+    val = ((val >> 3) | (val << 5)) & 0xff
+    # Reverse step 1: xor with rng
+    val = val ^ rng_byte
+    flag += chr(val)
+
+print(f"Flag: {flag}")
